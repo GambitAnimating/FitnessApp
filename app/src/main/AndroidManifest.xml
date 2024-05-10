@@ -23,6 +23,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Help Activity -->
+        <activity
+            android:name=".HelpActivity"
+            android:theme="@style/Theme.FitnessApp" />
     </application>
 
 </manifest>

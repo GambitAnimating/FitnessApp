@@ -21,11 +21,14 @@ import com.example.fitnessapp.model.LoginUIState
 fun ActivityPickerScreen(
     loginUIState: LoginUIState,
     modifier: Modifier = Modifier,
-    onClickLogout: () -> Unit
+    onClickLogout: () -> Unit,
+    onClickStartWorkout: () -> Unit,
+    onClickWorkoutLog: () -> Unit,
+    onClickPreferences: () -> Unit
 ) {
     val username = loginUIState.username
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
@@ -50,16 +53,24 @@ fun ActivityPickerScreen(
             )
         }
         Button(
-            onClick = { /* TODO: Implement start new workout action */ },
+            onClick = onClickStartWorkout,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp)
         ) {
-            Text("Start New Workout")
+            Text("Start A New Workout")
+        }
+        Button(
+            onClick = onClickWorkoutLog,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+        ) {
+            Text("Workout Log")
         }
 
         Button(
-            onClick = { /* TODO: Implement open settings action */ },
+            onClick = { onClickPreferences() },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp)
@@ -83,6 +94,9 @@ fun ActivityPickerPreview() {
     ActivityPickerScreen(
         loginUIState = LoginUIState("Jed"),
         onClickLogout = {},
+        onClickStartWorkout = {},
+        onClickWorkoutLog = {},
+        onClickPreferences = {},
         modifier = Modifier
             .padding(16.dp)
             .fillMaxSize(),

@@ -1,5 +1,6 @@
 package com.example.fitnessapp.ui
 
+import android.text.Layout
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -26,26 +28,38 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @Composable
 fun LoginScreen(
     onLoginButtonClicked: (username:String, password:String) -> Unit,
+    onHelpButtonClicked: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    Box(modifier = Modifier.fillMaxSize().padding(vertical = 75.dp)) {
+    Button(onClick = { onHelpButtonClicked() },
+        modifier = Modifier.align(Alignment.TopEnd), colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)) {
+        Text("Help", fontWeight = FontWeight.Black, style = MaterialTheme.typography.bodyLarge)
+    }
 
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
                 "Login",
                 modifier = Modifier.padding(
                     horizontal = 0.dp,
-                    vertical = 3.dp),
+                    vertical = 3.dp
+                ),
                 style = MaterialTheme.typography.headlineSmall,
                 color = Color.Black,
                 fontWeight = FontWeight.Black,
@@ -73,6 +87,7 @@ fun LoginScreen(
         Button(onClick = { onLoginButtonClicked(username, password) }) {
             Text("Login")
         }
+    }
     }
 }
 
