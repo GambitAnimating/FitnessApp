@@ -5,11 +5,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -18,9 +21,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.fitnessapp.data.SetInfo
 import com.example.fitnessapp.data.WorkoutInfo
 import com.example.fitnessapp.model.WorkoutViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import java.util.UUID
 
 @Composable
 fun NewWorkoutScreen(viewModel: WorkoutViewModel, onWorkoutFinishButtonClicked: () -> Unit = {}, modifier: Modifier = Modifier) {
+    val workouts = viewModel.workouts
     Column(
         modifier = modifier
             .padding(top = 75.dp, bottom = 10.dp)
@@ -31,8 +38,8 @@ fun NewWorkoutScreen(viewModel: WorkoutViewModel, onWorkoutFinishButtonClicked: 
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(viewModel.workouts, key = { it.id }) { workout ->
-                WorkoutCard(
+            items(workouts.value, key = { it.id }) { workout ->
+                WorkoutCard(viewModel,
                     workoutInfo = workout,
                     onNameChange = { newName ->
                         viewModel.updateWorkoutName(workout.id, newName)
@@ -56,9 +63,9 @@ fun NewWorkoutScreen(viewModel: WorkoutViewModel, onWorkoutFinishButtonClicked: 
         }
         Button(
             onClick = {
-                        viewModel.saveWorkout()
-                        onWorkoutFinishButtonClicked()
-                      },
+                viewModel.saveWorkout()
+                onWorkoutFinishButtonClicked()
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.CenterHorizontally),
@@ -70,7 +77,7 @@ fun NewWorkoutScreen(viewModel: WorkoutViewModel, onWorkoutFinishButtonClicked: 
 }
 
 @Composable
-fun WorkoutCard(
+fun WorkoutCard(viewModel: WorkoutViewModel,
     workoutInfo: WorkoutInfo,
     onNameChange: (String) -> Unit,
     onRemove: () -> Unit,
@@ -103,7 +110,7 @@ fun WorkoutCard(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            WorkoutCardInfo(workoutInfo.sets)
+            WorkoutCardInfo(viewModel, workoutInfo.id, workoutInfo.sets)
 
             Button(
                 onClick = onRemove,
@@ -121,24 +128,24 @@ fun WorkoutCard(
 @Preview(showBackground = true)
 @Composable
 fun NewWorkoutPreview() {
-    NewWorkoutScreen(viewModel = WorkoutViewModel())
+    //NewWorkoutScreen()
 }
 
 @Preview(showBackground = true)
 @Composable
 fun ExtraSettings() {
-    WorkoutCardInfo(sets = mutableListOf(SetInfo("10", "100"), SetInfo("12", "120")))
+    //WorkoutCardInfo(sets = mutableListOf(SetInfo("10", "100"), SetInfo("12", "120")))
 }
 
 @Composable
-fun WorkoutCardInfo(sets: MutableList<SetInfo>, modifier: Modifier = Modifier) {
-    val mutableSets = remember { mutableStateListOf<SetInfo>().apply { addAll(sets) } }
+fun WorkoutCardInfo(viewModel: WorkoutViewModel, workoutId: UUID, sets: List<SetInfo>, modifier: Modifier = Modifier) {
+    val triggerRecomposition = remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        mutableSets.forEachIndexed { index, setInfo ->
+        sets.forEachIndexed() { index, setInfo ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -150,7 +157,8 @@ fun WorkoutCardInfo(sets: MutableList<SetInfo>, modifier: Modifier = Modifier) {
                     OutlinedTextField(
                         value = setInfo.reps,
                         onValueChange = { newValue ->
-                            mutableSets[index] = setInfo.copy(reps = newValue)
+                            viewModel.updateSetReps(workoutId, index, newValue)
+                            triggerRecomposition.value = !triggerRecomposition.value
                         },
                         modifier = modifier.width(100.dp).height(50.dp),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -162,7 +170,8 @@ fun WorkoutCardInfo(sets: MutableList<SetInfo>, modifier: Modifier = Modifier) {
                     OutlinedTextField(
                         value = setInfo.weight,
                         onValueChange = { newValue ->
-                            mutableSets[index] = setInfo.copy(weight = newValue)
+                            viewModel.updateSetWeight(workoutId, index, newValue)
+                            triggerRecomposition.value = !triggerRecomposition.value
                         },
                         modifier = modifier.width(100.dp).height(50.dp),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -174,16 +183,18 @@ fun WorkoutCardInfo(sets: MutableList<SetInfo>, modifier: Modifier = Modifier) {
         Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             Button(
                 onClick = {
-                    mutableSets.add(SetInfo("", ""))
+                    viewModel.addSet(workoutId)
+                    triggerRecomposition.value = !triggerRecomposition.value
                 },
                 modifier = Modifier.align(Alignment.CenterVertically)
             ) {
                 Text("Add Set")
             }
-            if (mutableSets.size >= 1) {
+            if (sets.size >= 1) {
                 Button(
                     onClick = {
-                        mutableSets.removeAt(mutableSets.size - 1)
+                        viewModel.removeSet(workoutId, sets.size - 1)
+                        triggerRecomposition.value = !triggerRecomposition.value
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     modifier = Modifier.align(Alignment.CenterVertically)

@@ -32,6 +32,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.fitnessapp.model.LoginScreenView
 import com.example.fitnessapp.model.WorkoutViewModel
+import com.example.fitnessapp.ui.AppViewModelProvider
 import com.example.fitnessapp.ui.LoginScreen
 import com.example.fitnessapp.ui.theme.FitnessAppTheme
 
@@ -90,7 +91,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun FitnessApp() {
         val loginScreenViewModel: LoginScreenView = viewModel()
-        val workoutScreenViewModel: WorkoutViewModel = viewModel()
+        val workoutScreenViewModel: WorkoutViewModel = viewModel(factory = AppViewModelProvider.Factory)
         val navController = rememberNavController()
         val backStackEntry by navController.currentBackStackEntryAsState()
         val currentScreen = FitnessAppScreensEnum.valueOf(backStackEntry?.destination?.route ?: FitnessAppScreensEnum.LOGIN.name)
@@ -137,6 +138,7 @@ class MainActivity : ComponentActivity() {
                             navController.navigate(FitnessAppScreensEnum.START_WORKOUT.name)
                         },
                         onClickWorkoutLog = {
+                            workoutScreenViewModel.loadWorkouts()
                             navController.navigate(FitnessAppScreensEnum.EXERCISE_LOG.name)
                         },
                         onClickPreferences = {
@@ -155,7 +157,7 @@ class MainActivity : ComponentActivity() {
                         })
                 }
                 composable(FitnessAppScreensEnum.EXERCISE_LOG.name) {
-                    WorkoutLogScreen()
+                    WorkoutLogScreen(workoutScreenViewModel)
                 }
                 composable(FitnessAppScreensEnum.PREFERENCES.name) {
                     PreferencesScreen()
